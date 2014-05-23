@@ -36,6 +36,8 @@
 #include <OP/OP_Director.h>
 #include <OP/OP_Operator.h>
 #include <OP/OP_OperatorTable.h>
+#include <GA/GA_AttributeRef.h>
+#include <iostream.h>
 #include "SOP_CPPWave.h"
 
 using namespace HDK_Sample;
@@ -114,12 +116,22 @@ SOP_CPPWave::cookMySop(OP_Context &context)
 //	GA_FOR_ALL_PTOFF(gdp, ptoff)
 //		avg += P_h(ptoff);
 //		gdp->setPos3(ptoff, avg);
+//GA_RWAttributeRef Cd = addFloatTuple(GA_ATTRIB_POINT, "Cd", 3);
+//GA_RWAttributeRef N = addFloatTuple(GA_ATTRIB_POINT, "N", 3);
+	GA_RWHandleF attrib(gdp->addFloatTuple(GA_ATTRIB_POINT, "test", 1));
+	const GA_IndexMap points = gdp->getPointMap();
+	std::cout <<points.offsetSize()<< endl;
+	std::cout <<points.indexSize()<< endl;
 
-//	for (GA_Iterator it(gdp->getPointRange()); !it.atEnd(); ++it)
-//	{
-//		UT_Vector3 test(0,*it,0);
-//		gdp->setPos3(*it, test);
-//	}
+	for (GA_Iterator ptoff(gdp->getPointRange()); !ptoff.atEnd(); ++ptoff)
+
+	{
+		int pt = *ptoff;
+		GA_Offset offset = ptoff.getOffset();
+		UT_Vector3 test(0,offset,0);
+		gdp->setPos3(pt,test);
+		attrib.set(pt,pt);
+	}
 
     unlockInputs();
     return error();
