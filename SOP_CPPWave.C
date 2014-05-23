@@ -94,14 +94,32 @@ SOP_CPPWave::cookMySop(OP_Context &context)
     //       or don't bother making a new GA_RWHandleV3, and just use
     //       gdp->getPos3(ptoff) and gdp->setPos3(ptoff, Pvalue).
     //       This just gives an example supplying an attribute name.
-    GA_RWHandleV3 Phandle(gdp->findAttribute(GA_ATTRIB_POINT, "P"));
-    GA_Offset ptoff;
-    GA_FOR_ALL_PTOFF(gdp, ptoff)
-    {
-	UT_Vector3 Pvalue = Phandle.get(ptoff);
-	Pvalue.y() = sin(Pvalue.x()*.2 + Pvalue.z()*.3 + frame);
-	Phandle.set(ptoff, Pvalue);
-    }
+//	GA_Offset ptoff;
+//	GA_FOR_ALL_PTOFF(gdp,ptoff)
+//	{
+//		UT_Vector3 test(0,ptoff,0);
+//		gdp->setPos3(ptoff, test);
+//	}
+//    GA_RWHandleV3 Phandle(gdp->findAttribute(GA_ATTRIB_POINT, "P"));
+//    GA_Offset ptoff;
+//    GA_FOR_ALL_PTOFF(gdp, ptoff)
+//    {
+//	UT_Vector3 Pvalue = Phandle.get(ptoff);
+//	Pvalue.y() = sin(Pvalue.x()*.2 + Pvalue.z()*.3 + frame);
+//	Phandle.set(ptoff, Pvalue);
+//    }
+//	UT_Vector3   avg(0,1,0);
+//	GA_Offset    ptoff;
+//	GA_ROHandleV3        P_h(gdp->getP());
+//	GA_FOR_ALL_PTOFF(gdp, ptoff)
+//		avg += P_h(ptoff);
+//		gdp->setPos3(ptoff, avg);
+
+//	for (GA_Iterator it(gdp->getPointRange()); !it.atEnd(); ++it)
+//	{
+//		UT_Vector3 test(0,*it,0);
+//		gdp->setPos3(*it, test);
+//	}
 
     unlockInputs();
     return error();
