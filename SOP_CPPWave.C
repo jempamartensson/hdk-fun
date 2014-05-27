@@ -37,6 +37,8 @@
 #include <OP/OP_Operator.h>
 #include <OP/OP_OperatorTable.h>
 #include <GA/GA_AttributeRef.h>
+#include <GEO/GEO_PointTree.h>
+
 #include <iostream.h>
 #include "SOP_CPPWave.h"
 
@@ -119,17 +121,35 @@ SOP_CPPWave::cookMySop(OP_Context &context)
 //GA_RWAttributeRef Cd = addFloatTuple(GA_ATTRIB_POINT, "Cd", 3);
 //GA_RWAttributeRef N = addFloatTuple(GA_ATTRIB_POINT, "N", 3);
 	GA_RWHandleF attrib(gdp->addFloatTuple(GA_ATTRIB_POINT, "test", 1));
-	const GA_IndexMap points = gdp->getPointMap();
-	std::cout <<points.offsetSize()<< endl;
-	std::cout <<points.indexSize()<< endl;
+	const GA_IndexMap idx = gdp->getPointMap();
+	std::cout <<idx.offsetSize()<< endl;
+	std::cout <<idx.indexSize()<< endl;
+	GEO_PointList points = gdp->points();
+	GEO_PointTreeGAOffset pttree;
+	//GA_Offset ptoff;
+	pttree.build(gdp,NULL);
+	//UT_Vector3Array ptoff;
+	//UT_Vector3Array<GA_Offset> points;
+	//GA_Offset ptoff;
+	//points = gdp->getPos3(ptoff);
+	//GEO_PointTree ptree;
+	//ptree.build(points,gdp);
+	//GA_Offset ptoffs = pts->appendPoint();
+	//std::cout <<ptoffs<< endl;
+	
+	//GEO_PointTreeT pointTree;
+	
 
 	for (GA_Iterator ptoff(gdp->getPointRange()); !ptoff.atEnd(); ++ptoff)
 
 	{
-		int pt = *ptoff;
-		GA_Offset offset = ptoff.getOffset();
-		UT_Vector3 test(0,offset,0);
-		gdp->setPos3(pt,test);
+		UT_Vector3 pos;
+		pos = gdp->getPos3(*ptoff);
+		//int pt = *ptoff;
+		GA_Offset pt = pttree.findNearestIdx(pos);
+		//GA_Offset offset = ptoff.getOffset();
+		//UT_Vector3 test(0,offset,0);
+		//gdp->setPos3(pt,test);
 		attrib.set(pt,pt);
 	}
 
