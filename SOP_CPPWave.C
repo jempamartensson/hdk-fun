@@ -126,31 +126,34 @@ SOP_CPPWave::cookMySop(OP_Context &context)
 	std::cout <<idx.indexSize()<< endl;
 	GEO_PointList points = gdp->points();
 	GEO_PointTreeGAOffset pttree;
-	//GA_Offset ptoff;
+	GEO_PointTree pttreeT;
 	pttree.build(gdp,NULL);
-	//UT_Vector3Array ptoff;
-	//UT_Vector3Array<GA_Offset> points;
-	//GA_Offset ptoff;
-	//points = gdp->getPos3(ptoff);
-	//GEO_PointTree ptree;
-	//ptree.build(points,gdp);
-	//GA_Offset ptoffs = pts->appendPoint();
-	//std::cout <<ptoffs<< endl;
+	pttreeT.build(gdp,NULL);
+	fpreal dist = 1.2;
+	int numpt = 10;
+	UT_FloatArray ptdist;
+	GEO_PointTree::IdxArrayType plist;
+
 	
-	//GEO_PointTreeT pointTree;
+	
+	
 	
 
 	for (GA_Iterator ptoff(gdp->getPointRange()); !ptoff.atEnd(); ++ptoff)
 
 	{
-		UT_Vector3 pos;
-		pos = gdp->getPos3(*ptoff);
-		//int pt = *ptoff;
-		GA_Offset pt = pttree.findNearestIdx(pos);
+		//UT_Vector3 pos;
+		
+		int pt = *ptoff;
+		UT_Vector3 pos = gdp->getPos3(pt);
+		//GA_Offset pt = pttree.findNearestIdx(pos);
 		//GA_Offset offset = ptoff.getOffset();
 		//UT_Vector3 test(0,offset,0);
 		//gdp->setPos3(pt,test);
-		attrib.set(pt,pt);
+		
+		int nearptoff = pttree.findNearestGroupIdx(pos,dist,numpt,plist,ptdist);
+		
+		attrib.set(pt,plist[1]);
 	}
 
     unlockInputs();
