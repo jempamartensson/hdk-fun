@@ -47,8 +47,8 @@ using namespace HDK_Sample;
 void
 newSopOperator(OP_OperatorTable *table)
 {
-     table->addOperator(new OP_Operator("cpp_wave",
-					"CPP Wave ",
+     table->addOperator(new OP_Operator("uniformPdist",
+					"Uniform Point Dist ",
 					 SOP_CPPWave::myConstructor,
 					 SOP_CPPWave::myTemplateList,
 					 1,
@@ -94,66 +94,40 @@ SOP_CPPWave::cookMySop(OP_Context &context)
     fpreal frame = OPgetDirector()->getChannelManager()->getSample(context.getTime());
     frame *= 0.03;
 
-    // NOTE: If you are only interested in the P attribute, use gdp->getP(),
-    //       or don't bother making a new GA_RWHandleV3, and just use
-    //       gdp->getPos3(ptoff) and gdp->setPos3(ptoff, Pvalue).
-    //       This just gives an example supplying an attribute name.
-//	GA_Offset ptoff;
-//	GA_FOR_ALL_PTOFF(gdp,ptoff)
-//	{
-//		UT_Vector3 test(0,ptoff,0);
-//		gdp->setPos3(ptoff, test);
-//	}
-//    GA_RWHandleV3 Phandle(gdp->findAttribute(GA_ATTRIB_POINT, "P"));
-//    GA_Offset ptoff;
-//    GA_FOR_ALL_PTOFF(gdp, ptoff)
-//    {
-//	UT_Vector3 Pvalue = Phandle.get(ptoff);
-//	Pvalue.y() = sin(Pvalue.x()*.2 + Pvalue.z()*.3 + frame);
-//	Phandle.set(ptoff, Pvalue);
-//    }
-//	UT_Vector3   avg(0,1,0);
-//	GA_Offset    ptoff;
-//	GA_ROHandleV3        P_h(gdp->getP());
-//	GA_FOR_ALL_PTOFF(gdp, ptoff)
-//		avg += P_h(ptoff);
-//		gdp->setPos3(ptoff, avg);
-//GA_RWAttributeRef Cd = addFloatTuple(GA_ATTRIB_POINT, "Cd", 3);
-//GA_RWAttributeRef N = addFloatTuple(GA_ATTRIB_POINT, "N", 3);
+	//Create a test attrib
 	GA_RWHandleF attrib(gdp->addFloatTuple(GA_ATTRIB_POINT, "test", 1));
-	const GA_IndexMap idx = gdp->getPointMap();
-	std::cout <<idx.offsetSize()<< endl;
-	std::cout <<idx.indexSize()<< endl;
-	GEO_PointList points = gdp->points();
+	//Creating PointTree
 	GEO_PointTreeGAOffset pttree;
-	GEO_PointTree pttreeT;
+	//Build PointTree with all the points
 	pttree.build(gdp,NULL);
-	pttreeT.build(gdp,NULL);
+	//Setting the search distance
 	fpreal dist = 1.2;
+	//Setting number of points to search for
 	int numpt = 10;
+	//Create the Array wich holds the distance for the current point in the for loop
 	UT_FloatArray ptdist;
+	// Create the Array which holds a list sorted on distance to current point in the for loop
 	GEO_PointTree::IdxArrayType plist;
 
 	
 	
 	
 	
-
+	// loop over all points, find second closest point
 	for (GA_Iterator ptoff(gdp->getPointRange()); !ptoff.atEnd(); ++ptoff)
 
 	{
 		//UT_Vector3 pos;
-		
-		int pt = *ptoff;
-		UT_Vector3 pos = gdp->getPos3(pt);
+		//int pt = *ptoff;
+		UT_Vector3 pos = gdp->getPos3(*ptoff);
 		//GA_Offset pt = pttree.findNearestIdx(pos);
 		//GA_Offset offset = ptoff.getOffset();
 		//UT_Vector3 test(0,offset,0);
 		//gdp->setPos3(pt,test);
 		
-		int nearptoff = pttree.findNearestGroupIdx(pos,dist,numpt,plist,ptdist);
+		pttree.findNearestGroupIdx(pos,dist,numpt,plist,ptdist);
 		
-		attrib.set(pt,plist[1]);
+		attrib.set(*ptoff,plist[1]);
 	}
 
     unlockInputs();
