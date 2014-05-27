@@ -40,7 +40,7 @@
 #include <GEO/GEO_PointTree.h>
 
 #include <iostream.h>
-#include "SOP_CPPWave.h"
+#include "SOP_UniPdist.h"
 
 using namespace HDK_Sample;
 
@@ -49,36 +49,36 @@ newSopOperator(OP_OperatorTable *table)
 {
      table->addOperator(new OP_Operator("uniformPdist",
 					"Uniform Point Dist ",
-					 SOP_CPPWave::myConstructor,
-					 SOP_CPPWave::myTemplateList,
+					 SOP_UniPdist::myConstructor,
+					 SOP_UniPdist::myTemplateList,
 					 1,
 					 1,
 					 0));
 }
 
 PRM_Template
-SOP_CPPWave::myTemplateList[] = {
+SOP_UniPdist::myTemplateList[] = {
     PRM_Template(),
 };
 
 
 OP_Node *
-SOP_CPPWave::myConstructor(OP_Network *net, const char *name, OP_Operator *op)
+SOP_UniPdist::myConstructor(OP_Network *net, const char *name, OP_Operator *op)
 {
-    return new SOP_CPPWave(net, name, op);
+    return new SOP_UniPdist(net, name, op);
 }
 
-SOP_CPPWave::SOP_CPPWave(OP_Network *net, const char *name, OP_Operator *op)
+SOP_UniPdist::SOP_UniPdist(OP_Network *net, const char *name, OP_Operator *op)
 	: SOP_Node(net, name, op)
 {
 }
 
-SOP_CPPWave::~SOP_CPPWave()
+SOP_UniPdist::~SOP_UniPdist()
 {
 }
 
 OP_ERROR
-SOP_CPPWave::cookMySop(OP_Context &context)
+SOP_UniPdist::cookMySop(OP_Context &context)
 {
     // Before we do anything, we must lock our inputs.  Before returning,
     // we have to make sure that the inputs get unlocked.
