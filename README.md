@@ -1,8 +1,5 @@
 hdk-fun
 =======
 
-testing hdk
-
-My First Git-Hub Repo
-
-More to come
+A Uniform Point Distribution based on scatter points 
+on a surface

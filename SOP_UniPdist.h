@@ -11,7 +11,6 @@
 
 #include <SOP/SOP_Node.h>
 
-namespace HDK_Sample {
 
 
 class SOP_UniPdist : public SOP_Node
@@ -28,6 +27,5 @@ protected:
     virtual OP_ERROR		 cookMySop(OP_Context &context);
 private:
 };
-}	// End of HDK_Sample namespace
 
 #endif
