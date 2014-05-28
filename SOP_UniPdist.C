@@ -23,6 +23,8 @@
 #include "SOP_UniPdist.h"
 
 #define INPUT0_LABEL "Points to distrubute"
+#define REMOVE_GROUP_NAME "removePointGroup"
+#define KEEP_GROUP_NAME "keepPointGroup"
 
 void
 newSopOperator(OP_OperatorTable *table)
@@ -36,13 +38,15 @@ newSopOperator(OP_OperatorTable *table)
 					 0));
 }
 
+static PRM_Range rangeP(PRM_RANGE_UI , 0.0, PRM_RANGE_UI , 100.0);
+static PRM_Default  oneDefault(1);
 static PRM_Name distanceName ("dist", "Distance");
 static PRM_Name keepGroup("keepgroup", "Keep group");
 
+
 PRM_Template
 SOP_UniPdist::myTemplateList[] = {
-	PRM_Template(PRM_STRING,    1, &keepGroup, 0, &SOP_Node::pointGroupMenu),
-	PRM_Template(PRM_FLT_J, 1, &distanceName, PRMzeroDefaults, 0, &PRMscaleRange, 0, 0, 0, "Distance/Radius"),
+	PRM_Template(PRM_FLT_J, 1, &distanceName, &oneDefault, 0, &rangeP, 0, 0, 0, "Distance/Radius"),
     PRM_Template(),
 };
 
@@ -61,6 +65,16 @@ SOP_UniPdist::~SOP_UniPdist()
 {
 }
 
+
+OP_ERROR
+SOP_UniPdist::cookInputGroups(OP_Context &context, int alone)
+{
+    // The SOP_Node::cookInputPointGroups() provides a good default
+    // implementation for just handling a point selection.
+    return cookInputPointGroups(context, myGroup, myDetailGroupPair, alone);
+}
+
+
 OP_ERROR SOP_UniPdist::cookMySop(OP_Context &context)
 {
     // Before we do anything, we must lock our inputs.  Before returning,
@@ -74,12 +88,15 @@ OP_ERROR SOP_UniPdist::cookMySop(OP_Context &context)
 	float time = context.getTime();
 	float dist = evalFloat(distanceName.getToken(), 0, time);
 	
+	GA_PointGroup *removeGroup = gdp->newPointGroup(REMOVE_GROUP_NAME);
+	GA_PointGroup *keepGroup   = gdp->newPointGroup(KEEP_GROUP_NAME);
+	
 
     // Flag the SOP as being time dependent (i.e. cook on time changes)
     flags().timeDep = 1;
 
 	//Create a removeAttrib
-	GA_RWHandleI removeAttrib(gdp->addIntTuple(GA_ATTRIB_POINT, "remove", 1));
+	GA_RWHandleI removeAttrib(gdp->addIntTuple(GA_ATTRIB_POINT, "__remove__", 1));
 	
 	//Creating PointTree
 	GEO_PointTreeGAOffset pttree;
@@ -89,6 +106,11 @@ OP_ERROR SOP_UniPdist::cookMySop(OP_Context &context)
 	
 	//Create the Array wich holds the distance for the current point in the for loop
 	UT_FloatArray ptdist;
+	
+	// Index offset
+	const GA_IndexMap points = gdp->getPointMap();
+	GA_Size ptoffsetindex;
+	ptoffsetindex = points.offsetSize()-points.indexSize();
 	
 
 	//set all
@@ -108,7 +130,11 @@ OP_ERROR SOP_UniPdist::cookMySop(OP_Context &context)
 		int removeMe;
 		removeMe = int(removeAttrib.get(*ptoff));
 		if(removeMe)
+		{
+			removeGroup->addIndex(*ptoff-ptoffsetindex);
 			continue;
+		}
+			
 		// Create the Array which holds a list sorted on distance to current point in the for loop
 		GEO_PointTree::IdxArrayType plist; //plist
 		UT_Vector3 pos = gdp->getPos3(*ptoff); // create pos
@@ -122,8 +148,12 @@ OP_ERROR SOP_UniPdist::cookMySop(OP_Context &context)
 			removeAttrib.set(plist[i],1); //set the tempList points to be removed
 		}
 		removeAttrib.set(*ptoff,0);
+		keepGroup->addIndex(*ptoff-ptoffsetindex);
 	}
 	pttree.clear(); //clear the pointtree
+	//removeAttrib.clear();
+	
+	
     unlockInputs();
     return error();
 }

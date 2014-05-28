@@ -18,6 +18,8 @@ class SOP_UniPdist : public SOP_Node
 public:
 	     SOP_UniPdist(OP_Network *net, const char *name, OP_Operator *op);
     virtual ~SOP_UniPdist();
+	virtual OP_ERROR             cookInputGroups(OP_Context &context, 
+                                                int alone = 0);
 
     static PRM_Template		 myTemplateList[];
     static OP_Node		*myConstructor(OP_Network*, const char *,
@@ -26,8 +28,9 @@ public:
 protected:
     virtual OP_ERROR		 cookMySop(OP_Context &context);
 private:
-
-const GA_PointGroup *myGroup;
+	
+	GU_DetailGroupPair   myDetailGroupPair;
+	const GA_PointGroup *myGroup;
 };
 
 #endif
