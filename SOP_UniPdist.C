@@ -22,7 +22,7 @@
 #include <iostream.h>
 #include "SOP_UniPdist.h"
 
-
+#define INPUT0_LABEL "Points to distrubute"
 
 void
 newSopOperator(OP_OperatorTable *table)
@@ -36,20 +36,24 @@ newSopOperator(OP_OperatorTable *table)
 					 0));
 }
 
+static PRM_Name distanceName ("dist", "Distance");
+static PRM_Name keepGroup("keepgroup", "Keep group");
+
 PRM_Template
 SOP_UniPdist::myTemplateList[] = {
+	PRM_Template(PRM_STRING,    1, &keepGroup, 0, &SOP_Node::pointGroupMenu),
+	PRM_Template(PRM_FLT_J, 1, &distanceName, PRMzeroDefaults, 0, &PRMscaleRange, 0, 0, 0, "Distance/Radius"),
     PRM_Template(),
 };
 
 
-OP_Node *
-SOP_UniPdist::myConstructor(OP_Network *net, const char *name, OP_Operator *op)
+OP_Node *SOP_UniPdist::myConstructor(OP_Network *net, const char *name, OP_Operator *op)
 {
     return new SOP_UniPdist(net, name, op);
 }
 
 SOP_UniPdist::SOP_UniPdist(OP_Network *net, const char *name, OP_Operator *op)
-	: SOP_Node(net, name, op)
+	: SOP_Node(net, name, op), myGroup(0)
 {
 }
 
@@ -57,8 +61,7 @@ SOP_UniPdist::~SOP_UniPdist()
 {
 }
 
-OP_ERROR
-SOP_UniPdist::cookMySop(OP_Context &context)
+OP_ERROR SOP_UniPdist::cookMySop(OP_Context &context)
 {
     // Before we do anything, we must lock our inputs.  Before returning,
     // we have to make sure that the inputs get unlocked.
@@ -68,37 +71,31 @@ SOP_UniPdist::cookMySop(OP_Context &context)
     // Duplicate input geometry
     duplicateSource(0, context);
 
+	float time = context.getTime();
+	float dist = evalFloat(distanceName.getToken(), 0, time);
+	
+
     // Flag the SOP as being time dependent (i.e. cook on time changes)
     flags().timeDep = 1;
 
-    fpreal frame = OPgetDirector()->getChannelManager()->getSample(context.getTime());
-    frame *= 0.03;
-
-	//Create a test attrib
-	GA_RWHandleI testH(gdp->addIntTuple(GA_ATTRIB_POINT, "test", 1));
+	//Create a removeAttrib
+	GA_RWHandleI removeAttrib(gdp->addIntTuple(GA_ATTRIB_POINT, "remove", 1));
 	
-	GA_RWHandleI nptH(gdp->addIntTuple(GA_ATTRIB_POINT, "numberofpt", 1));
 	//Creating PointTree
 	GEO_PointTreeGAOffset pttree;
 	//Build PointTree with all the points
 	pttree.build(gdp,NULL);
-	//Setting the search distance
-	fpreal dist = 1.2;
-	//Setting number of points to search for
-	int numpt = 10;
+	
+	
 	//Create the Array wich holds the distance for the current point in the for loop
 	UT_FloatArray ptdist;
-	// Create the Array which holds a list sorted on distance to current point in the for loop
-	GEO_PointTree::IdxArrayType plist;
-	//Create number of points attribute
-	GA_Size npts = gdp->getNumPoints();
-	std::cout <<npts<< endl;
-	const GA_IndexMap points = gdp->getPointMap();
-	GA_Size ptoffsetindex;
-	ptoffsetindex = points.offsetSize()-points.indexSize();
-	std::cout <<points.offsetSize()<< endl;
-	std::cout <<points.indexSize()<< endl;
 	
+
+	//set all
+	for (GA_Iterator ptoff(gdp->getPointRange()); !ptoff.atEnd(); ++ptoff) 
+	{
+		removeAttrib.set(*ptoff,0);
+	}
 
 	
 	
@@ -108,19 +105,25 @@ SOP_UniPdist::cookMySop(OP_Context &context)
 	for (GA_Iterator ptoff(gdp->getPointRange()); !ptoff.atEnd(); ++ptoff)
 
 	{
-		//UT_Vector3 pos;
-		//int pt = *ptoff;
-		UT_Vector3 pos = gdp->getPos3(*ptoff);
-		//GA_Offset pt = pttree.findNearestIdx(pos);
-		//GA_Offset offset = ptoff.getOffset();
-		//UT_Vector3 test(0,offset,0);
-		//gdp->setPos3(pt,test);
+		int removeMe;
+		removeMe = int(removeAttrib.get(*ptoff));
+		if(removeMe)
+			continue;
+		// Create the Array which holds a list sorted on distance to current point in the for loop
+		GEO_PointTree::IdxArrayType plist; //plist
+		UT_Vector3 pos = gdp->getPos3(*ptoff); // create pos
+		pttree.findAllCloseIdx(pos,dist,plist); // find all points within the search radius
 		
-		pttree.findNearestGroupIdx(pos,dist,numpt,plist,ptdist);
-		nptH.set(*ptoff,npts);
-		testH.set(*ptoff,plist[1]-ptoffsetindex);
-	}
+		
+		unsigned int tempListP = plist.entries(); //create a int for entries in the array
 
+		for(int i=0;i < tempListP; ++i)
+		{
+			removeAttrib.set(plist[i],1); //set the tempList points to be removed
+		}
+		removeAttrib.set(*ptoff,0);
+	}
+	pttree.clear(); //clear the pointtree
     unlockInputs();
     return error();
 }

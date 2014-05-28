@@ -26,6 +26,8 @@ public:
 protected:
     virtual OP_ERROR		 cookMySop(OP_Context &context);
 private:
+
+const GA_PointGroup *myGroup;
 };
 
 #endif
