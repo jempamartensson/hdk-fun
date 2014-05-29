@@ -1,7 +1,7 @@
 //
 //
 //
-//
+//Rewritten Plucker SOP for the new GA Library in Houdini 13 
 //
 //
 //
@@ -151,7 +151,6 @@ OP_ERROR SOP_UniPdist::cookMySop(OP_Context &context)
 		keepGroup->addIndex(*ptoff-ptoffsetindex);
 	}
 	pttree.clear(); //clear the pointtree
-	//removeAttrib.clear();
 	
 	
     unlockInputs();
